@@ -13,11 +13,13 @@ namespace SPBrowser
     public partial class SplashScreen : Form
     {
         // Delegates for cross thread calls
-        private delegate void CloseDelegate();        
+        private delegate bool IsActiveDelegate();
+        private delegate void CloseDelegate();
         private delegate void UpdateDelegate(string message);
+        private delegate DialogResult ShowMessageBoxDelegate(string message, MessageBoxButtons messageBoxButtons, MessageBoxIcon messageBoxIcon);
 
         // The type of form to be displayed as the splash screen.
-        private static SplashScreen splashForm;
+        private static SplashScreen _splashForm;
 
         /// <summary>
         /// Launch splash screen.
@@ -25,7 +27,7 @@ namespace SPBrowser
         static public void ShowSplashScreen()
         {
             // Make sure it is only launched once.
-            if (splashForm != null)
+            if (_splashForm != null)
                 return;
 
             Thread thread = new Thread(new ThreadStart(SplashScreen.ShowFormInternal));
@@ -39,13 +41,41 @@ namespace SPBrowser
         /// </summary>
         static private void ShowFormInternal()
         {
-            splashForm = new SplashScreen();
-            splashForm.MinimumSize = splashForm.Size;
-            splashForm.MaximumSize = splashForm.Size;
+            _splashForm = new SplashScreen();
+            _splashForm.MinimumSize = _splashForm.Size;
+            _splashForm.MaximumSize = _splashForm.Size;
 
-            Application.Run(splashForm);
+            Application.Run(_splashForm);
 
-            splashForm.Focus();
+            _splashForm.Focus();
+        }
+
+        /// <summary>
+        /// Determines whether the <see cref="SplashScreen"/> is active.
+        /// </summary>
+        /// <returns>
+        ///   <c>true</c> if this instance is active; otherwise, <c>false</c>.
+        /// </returns>
+        static public bool IsActive()
+        {
+            bool isActive = false;
+
+            try
+            {
+                isActive = (bool)_splashForm.Invoke(new IsActiveDelegate(SplashScreen.IsActiveInternal));
+            }
+            catch (InvalidOperationException)
+            { }
+
+            return isActive;
+        }
+
+        /// <summary>
+        /// Internal <see cref="IsActiveInternal"/> method to support close in cross thread call.
+        /// </summary>
+        static private bool IsActiveInternal()
+        {
+            return _splashForm != null;
         }
 
         /// <summary>
@@ -55,7 +85,7 @@ namespace SPBrowser
         {
             WaitForSplashScreen();
 
-            splashForm.Invoke(new CloseDelegate(SplashScreen.CloseFormInternal));
+            _splashForm.Invoke(new CloseDelegate(SplashScreen.CloseFormInternal));
         }
 
         /// <summary>
@@ -63,7 +93,7 @@ namespace SPBrowser
         /// </summary>
         static private void CloseFormInternal()
         {
-            splashForm.Close();
+            _splashForm.Close();
         }
 
         /// <summary>
@@ -74,7 +104,7 @@ namespace SPBrowser
         {
             WaitForSplashScreen();
 
-            splashForm.Invoke(new UpdateDelegate(SplashScreen.UpdateFormInternal), message);
+            _splashForm.Invoke(new UpdateDelegate(SplashScreen.UpdateFormInternal), message);
         }
 
         /// <summary>
@@ -82,7 +112,35 @@ namespace SPBrowser
         /// </summary>
         static private void UpdateFormInternal(string message)
         {
-            splashForm.lbStatus.Text = message;
+            _splashForm.lbStatus.Text = message;
+        }
+
+        /// <summary>
+        /// Shows the message box.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="messageBoxButtons">The message box buttons.</param>
+        /// <param name="messageBoxIcon">The message box icon.</param>
+        /// <returns></returns>
+        static public DialogResult ShowMessageBox(string message, MessageBoxButtons messageBoxButtons, MessageBoxIcon messageBoxIcon)
+        {
+            WaitForSplashScreen();
+
+            DialogResult result = (DialogResult)_splashForm.Invoke(new ShowMessageBoxDelegate(SplashScreen.ShowMessageBoxInternal), message, messageBoxButtons, messageBoxIcon);
+
+            return result;
+        }
+
+        /// <summary>
+        /// Internal <see cref="ShowMessageBoxInternal"/> method to support update in cross thread call.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="messageBoxButtons">The message box buttons.</param>
+        /// <param name="messageBoxIcon">The message box icon.</param>
+        /// <returns></returns>
+        static private DialogResult ShowMessageBoxInternal(string message, MessageBoxButtons messageBoxButtons, MessageBoxIcon messageBoxIcon)
+        {
+            return MessageBox.Show(message, Application.ProductName, messageBoxButtons, messageBoxIcon);
         }
 
         /// <summary>
@@ -98,8 +156,10 @@ namespace SPBrowser
 
             for (int i = step; i < timeout; i = i + step)
             {
-                if (splashForm != null)
+                if (_splashForm != null && _splashForm.IsHandleCreated)
+                {
                     break;
+                }
 
                 Console.WriteLine("Working on it... (Splashscreen launch - {0} ms)", i);
                 Thread.Sleep(i);

@@ -22,3 +22,7 @@
 // TODO: It would be an even greater solution, if we could compare two different site collections. ie a function that would iterate through all properties / lists etc, and mark any differences.
 // TODO: Progress bar in front (better UX), https://blogs.msdn.microsoft.com/jfoscoding/2005/08/06/keeping-your-ui-responsive-and-the-dangers-of-application-doevents/
 // TODO: Force loading assemblies from executing directory, see https://support.microsoft.com/en-us/kb/837908 (try using method #3) - workitem #63924
+// TODO: Add support for PnP PowerShell, start PS or PS ISE with connect to site by (re)using CredMan credentials
+// TODO: Update support for PowerShell scripts, make use of CredMan credentials as a workaround for entering password
+// TODO: CredMan cleanup, after remove site also remove CredMan credential
+// TODO: CredMan cleanup of old credential entries

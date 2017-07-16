@@ -100,6 +100,7 @@
         ItemProperties,
         FileProperties,
         FileVersionEvents,
-        TimeZones
+        TimeZones,
+        SiteCollectionAdmins
     }
 }

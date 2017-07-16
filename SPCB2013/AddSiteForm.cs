@@ -220,7 +220,17 @@ namespace SPBrowser
 
                 // Add new site collection
                 AuthenticationMode authentication = (AuthenticationMode)cbAuthentication.SelectedIndex;
-                Globals.Sites.Add(new Uri(tbSiteUrl.Text), tbUsername.Text.Trim(), tbPassword.Text.Trim(), authentication);
+                SiteAuthentication site = Globals.Sites.Add(new Uri(tbSiteUrl.Text), tbUsername.Text.Trim(), tbPassword.Text.Trim(), authentication);
+
+                // Warning on mismatch SPCB and server build version
+                Server server = null;
+                if (!ProductUtil.DoesServerBuildVersionMatchThisRelease(site.BuildVersion, out server))
+                {
+                    if (MessageBox.Show($"The site you added is incompatible with this release of SharePoint Client Browser.\n\nThe site seems to be hosted on {server.ProductFullname} ({server.BuildVersion}) which is compatible with '{server.CompatibleRelease}', you can download this from {Constants.CODEPLEX_PROJECT_URL}.\n\nDo you want to download the '{server.CompatibleRelease}' release now?", this.Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(Constants.CODEPLEX_PROJECT_URL);
+                    }
+                }
 
                 // Close dialog
                 this.DialogResult = DialogResult.OK;

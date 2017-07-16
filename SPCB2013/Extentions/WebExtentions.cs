@@ -13,7 +13,7 @@ namespace SPBrowser.Extentions
         /// </summary>
         /// <param name="web"></param>
         /// <returns></returns>
-        public static string GetWebUrl(this SPClient.Web web)
+        public static string GetUrl(this SPClient.Web web)
         {
             if (!web.IsPropertyAvailable("Url"))
             {
@@ -29,9 +29,9 @@ namespace SPBrowser.Extentions
         /// </summary>
         /// <param name="web"></param>
         /// <returns>Returns Site Settings URL.</returns>
-        public static string GetSiteSettingsUrl(this SPClient.Web web)
+        public static string GetSettingsUrl(this SPClient.Web web)
         {
-            return web.GetWebUrl() + "/_layouts/settings.aspx";
+            return web.GetUrl() + "/_layouts/settings.aspx";
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace SPBrowser.Extentions
         /// <returns></returns>
         public static string GetSiteWebDavUrl(this SPClient.Web web)
         {
-            Uri webUri = new Uri(web.GetWebUrl());
+            Uri webUri = new Uri(web.GetUrl());
             string webDavUrl = string.Format("\\\\{0}@SSL\\DavWWWRoot{1}", webUri.DnsSafeHost, webUri.AbsolutePath.Replace('/','\\'));
 
             return webDavUrl;
@@ -66,7 +66,7 @@ namespace SPBrowser.Extentions
         /// <returns></returns>
         public static Uri GetRestUrl(this SPClient.Web web)
         {
-            return new Uri(string.Format("{0}/_api/web", web.GetWebUrl()));
+            return new Uri(string.Format("{0}/_api/web", web.GetUrl()));
         }
     }
 }

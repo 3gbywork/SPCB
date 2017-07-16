@@ -143,6 +143,9 @@ namespace SPBrowser
                     WhatsNewForm form = new WhatsNewForm();
                     form.ShowDialog(this);
                 }
+
+                //// Show New Release available message box
+                //this.CheckForNewRelease();
             }
             catch (Exception ex)
             {
@@ -444,7 +447,7 @@ namespace SPBrowser
         {
             LogUtil.NewCorrelation();
 
-            CheckOnUpdate(false);
+            CheckForNewRelease(true);
         }
 
         private void openCodeplexToolStripMenuItem_Click(object sender, EventArgs e)
@@ -489,7 +492,7 @@ namespace SPBrowser
         private void NodeLoader_UserProfilesBatchCompleted(object sender, BatchCompletedEventArgs e)
         {
             bool hasMore = e.TotalItems > e.CurrentItem;
-            
+
             // Calculate estimated total duration
             int batchCount = e.TotalItems / e.BatchSize;
             int currentBatch = e.CurrentItem / e.BatchSize;
@@ -660,52 +663,39 @@ namespace SPBrowser
 
         #region Methods
 
-        /// <summary>
-        /// Checks online in Codeplex Releases section for a new release of SharePoint Client Browser.
-        /// </summary>
-        /// <param name="ignoreNoUpdateMessage">Ignore the message popup when no new release is found.</param>
-        static public void CheckOnUpdate(bool ignoreNoUpdateMessage = true)
+        public void CheckForNewRelease(bool forceReleaseAvailabilityCheck = false)
         {
-            bool isNewUpdateAvailable = false;
-            Version newVersion = null;
-            Uri downloadUrl = null;
-            string updateTitle = string.Empty;
-
             try
             {
-                isNewUpdateAvailable = ProductUtil.IsNewUpdateAvailable(out newVersion, out downloadUrl, out updateTitle);
-
-                LogUtil.LogMessage(string.Format("Check on update: {0}new version available. Current release: {1} ({3}), download at {2}",
-                        isNewUpdateAvailable ? "" : "no ",
-                        newVersion,
-                        downloadUrl,
-                        updateTitle),
-                    LogLevel.Information);
-
-                // Show status to user
-                if (isNewUpdateAvailable)
+                //force check on new release, when no release data is available
+                if (Globals.LatestRelease == null || forceReleaseAvailabilityCheck)
                 {
-                    // New version of SPCB is avialable, show message box.
-                    if (MessageBox.Show(
-                        string.Format("A new version '{0}' is available! \n\nDo you want to download the new version.",
-                            updateTitle),
-                        Application.ProductName,
-                        MessageBoxButtons.YesNo,
-                        MessageBoxIcon.Question) == DialogResult.Yes)
+                    Globals.LatestRelease = ProductUtil.GetLatestRelease();
+
+                    if (forceReleaseAvailabilityCheck && Globals.LatestRelease == null)
                     {
-                        System.Diagnostics.Process.Start(downloadUrl.OriginalString);
+                        MessageBox.Show($"No new release of '{Application.ProductName}' available at the moment. Please check later...", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        return;
                     }
                 }
-                else if (!ignoreNoUpdateMessage)
+
+                //check for update and take action
+                if (Globals.LatestRelease != null && Globals.LatestRelease.Version > ProductUtil.GetCurrentProductVersion())
+                {
+                    // New version of SPCB is avialable, show message box.
+                    LogUtil.LogMessage($"New release available: {Globals.LatestRelease.Version} ({Globals.LatestRelease.Title}), download at {Globals.LatestRelease.DownloadUrl}", LogLevel.Information);
+
+                    if (MessageBox.Show($"New release '{Globals.LatestRelease.Title}' is available! \n\nDo you want to download the new version.", Application.ProductName, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+                    {
+                        System.Diagnostics.Process.Start(Globals.LatestRelease.DownloadUrl.OriginalString);
+                    }
+                }
+                else if(forceReleaseAvailabilityCheck)
                 {
                     // Show message box indicating NO new version is available.
-                    MessageBox.Show(
-                        string.Format("No new version of '{0}' is available at the moment. Please check later...\n\nCurrent release is '{1}'.",
-                            Application.ProductName,
-                            updateTitle),
-                        Application.ProductName,
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information);
+                    LogUtil.LogMessage($"No new release available. Current downloadable release: {Globals.LatestRelease.Version} ({Globals.LatestRelease.Title}), download at {Globals.LatestRelease.DownloadUrl}", LogLevel.Information);
+
+                    MessageBox.Show($"No new release of '{Application.ProductName}' available at the moment. Please check later...\n\nCurrent release is '{Globals.LatestRelease.Title}'.", Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
@@ -737,7 +727,7 @@ namespace SPBrowser
 
                     ToolStripItem itemContext = recentSitesContextToolStripMenuItem.DropDownItems.Add(site.UrlAsString);
                     itemContext.Click += recentSiteCollectionItem_Click;
-                    item.ToolTipText = toolTip;
+                    itemContext.ToolTipText = toolTip;
                 }
 
                 // Enable menu item
@@ -1300,6 +1290,9 @@ namespace SPBrowser
                     case NodeLoadType.TimeZones:
                         NodeLoader.LoadTimeZones(node, ((SPClient.RegionalSettings)node.Parent.Tag).TimeZones, this, loadType);
                         break;
+                    case NodeLoadType.SiteCollectionAdmins:
+                        NodeLoader.LoadSiteCollectionAdmins(node, (SPClient.Site)node.Parent.Tag, this, loadType);
+                        break;
 #if CLIENTSDKV160UP
                     case NodeLoadType.FileProperties:
                         NodeLoader.LoadProperties(node, ((SPClient.File)node.Parent.Tag).Properties, this, loadType);
@@ -1500,7 +1493,9 @@ namespace SPBrowser
             ToolStripMenuItem menu = new ToolStripMenuItem(string.Format("Open with {1}{0}", isPrivateMode ? Constants.BROWSER_IN_PRIVATE_MODE_LABEL : string.Empty, browser.Name));
             menu.Click += eventHandler;
             menu.Tag = browser;
-            menu.Image = BrowserUtil.GetBrowserIcon(browser).ToBitmap();
+
+            Icon browserIcon = BrowserUtil.GetBrowserIcon(browser);
+            menu.Image = browserIcon == null ? null : browserIcon.ToBitmap();
 
             parentMenuItem.DropDownItems.Add(menu);
         }
@@ -1665,7 +1660,7 @@ namespace SPBrowser
                 switch (_selectedContextMenuNode.Tag.GetClientType())
                 {
                     case ClientType.Web:
-                        url = ((SPClient.Web)_selectedContextMenuNode.Tag).GetWebUrl();
+                        url = ((SPClient.Web)_selectedContextMenuNode.Tag).GetUrl();
                         break;
                     case ClientType.List:
                         url = ((SPClient.List)_selectedContextMenuNode.Tag).GetListUrl();
@@ -1677,7 +1672,7 @@ namespace SPBrowser
                         url = ((SPClient.Folder)_selectedContextMenuNode.Tag).GetFolderUrl();
                         break;
                     case ClientType.File:
-                        url = ((SPClient.File)_selectedContextMenuNode.Tag).GetFileUrl();
+                        url = ((SPClient.File)_selectedContextMenuNode.Tag).GetUrl();
                         break;
                     case ClientType.View:
                         url = ((SPClient.View)_selectedContextMenuNode.Tag).GetViewUrl();
@@ -1715,7 +1710,7 @@ namespace SPBrowser
                 switch (_selectedContextMenuNode.Tag.GetClientType())
                 {
                     case ClientType.Web:
-                        url = ((SPClient.Web)_selectedContextMenuNode.Tag).GetSiteSettingsUrl();
+                        url = ((SPClient.Web)_selectedContextMenuNode.Tag).GetSettingsUrl();
                         break;
                     case ClientType.List:
                         url = ((SPClient.List)_selectedContextMenuNode.Tag).GetSettingsUrl();

@@ -8,6 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using SPClient = Microsoft.SharePoint.Client;
 
@@ -110,6 +111,32 @@ namespace SPBrowser.Entities
         private SPClient.ClientContext _ctx;
 
         /// <summary>
+        /// Gets the build version of the remote SharePoint Server.
+        /// </summary>
+        /// <value>
+        /// The build version.
+        /// </value>
+        [XmlIgnore]
+        public Version BuildVersion
+        {
+            get { return _buildVersion; }
+            private set { _buildVersion = value; }
+        }
+        private Version _buildVersion;
+
+        /// <summary>
+        /// Gets a value indicating whether [use current credentials].
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if [use current credentials]; otherwise, <c>false</c>.
+        /// </value>
+        [XmlIgnore]
+        public bool UseCurrentCredentials
+        {
+            get { return string.IsNullOrEmpty(this.UserName); }
+        }
+
+        /// <summary>
         /// Gets and sets a list of webs which are loaded separately and shown directly below the site collection.
         /// </summary>
         [XmlElement()]
@@ -167,13 +194,14 @@ namespace SPBrowser.Entities
 
                 // Set client context
                 this.ClientContext = new SPClient.ClientContext(this.Url);
+                this.ClientContext.ApplicationName = ProductUtil.GetProductName();
 
                 // Set authentication mode and credentials
                 switch (this.Authentication)
                 {
                     case AuthenticationMode.Default:
                         this.ClientContext.AuthenticationMode = ClientAuthenticationMode.Default;
-                        if (string.IsNullOrEmpty(this.UserName))
+                        if (this.UseCurrentCredentials)
                         {
                             LogUtil.LogMessage("Using current user credentials for user '{0}\\{1}'.", Environment.UserDomainName, Environment.UserName);
                             this.ClientContext.Credentials = CredentialCache.DefaultNetworkCredentials;
@@ -226,6 +254,9 @@ namespace SPBrowser.Entities
                     this.ClientContext.ServerLibraryVersion,
                     this.ClientContext.RequestSchemaVersion,
                     this.ClientContext.TraceCorrelationId);
+
+                //Try retrieving the SharePoint Server build version
+                this.BuildVersion = TryGetServerVersion(site.Url);
             }
             catch (FileNotFoundException ex)
             {
@@ -233,6 +264,54 @@ namespace SPBrowser.Entities
 
                 throw;
             }
+        }
+
+        private Version TryGetServerVersion(string siteUrl)
+        {
+            Version spVersion = null;
+            string buildVersionUrl = string.Empty;
+
+            try
+            {
+                Uri url = new Uri(siteUrl);
+                buildVersionUrl = $"{url.Scheme}://{url.Host}/_vti_pvt/buildversion.cnf";
+
+                WebRequest request = WebRequest.Create(buildVersionUrl);
+                request.Timeout = 1000;
+
+                if (this.UseCurrentCredentials)
+                {
+                    request.UseDefaultCredentials = true;
+                }
+                else
+                {
+                    request.Credentials =  new NetworkCredential(this.UserName, this.Password);
+                }
+
+                WebResponse response = request.GetResponse();
+                StreamReader reader = new StreamReader(response.GetResponseStream());
+
+                string lines = reader.ReadToEnd();
+
+                response.Close();
+                reader.Close();
+
+                Regex regex = new Regex(@"((\d)+\.){3}(\d)+");
+                Match result = regex.Match(lines);
+
+                if (result.Success)
+                {
+                    spVersion = new Version(result.Value);
+
+                    LogUtil.LogMessage($"Retrieved SharePoint Server build version: {spVersion} ({buildVersionUrl})");
+                }
+            }
+            catch (Exception ex)
+            {
+                LogUtil.LogMessage($"Could not retrieve SharePoint Server build version ({buildVersionUrl}), reason: {ex.Message}.");
+            }
+
+            return spVersion;
         }
     }
 
@@ -255,9 +334,9 @@ namespace SPBrowser.Entities
                 if (string.IsNullOrEmpty(siteUrl))
                     throw new ArgumentNullException(siteUrl);
 
-                return this.SingleOrDefault(s => 
-                    s.IsLoaded && 
-                    s.Url != null && 
+                return this.SingleOrDefault(s =>
+                    s.IsLoaded &&
+                    s.Url != null &&
                     Uri.Compare(s.Url, new Uri(siteUrl), UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped, StringComparison.InvariantCultureIgnoreCase) == 0);
             }
         }
@@ -277,12 +356,12 @@ namespace SPBrowser.Entities
                     throw new ArgumentNullException(siteUrl);
 
                 if (isLoaded == null)
-                    return this.SingleOrDefault(s => 
+                    return this.SingleOrDefault(s =>
                         s.Url != null &&
                         Uri.Compare(s.Url, new Uri(siteUrl), UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped, StringComparison.InvariantCultureIgnoreCase) == 0);
                 else
-                    return this.SingleOrDefault(s => 
-                        s.IsLoaded == isLoaded && 
+                    return this.SingleOrDefault(s =>
+                        s.IsLoaded == isLoaded &&
                         s.Url != null &&
                         Uri.Compare(s.Url, new Uri(siteUrl), UriComponents.HttpRequestUrl, UriFormat.SafeUnescaped, StringComparison.InvariantCultureIgnoreCase) == 0);
             }
@@ -295,7 +374,7 @@ namespace SPBrowser.Entities
         /// <param name="username"></param>
         /// <param name="password"></param>
         /// <param name="authn"></param>
-        public void Add(Uri url, string username, string password, AuthenticationMode authn)
+        public SiteAuthentication Add(Uri url, string username, string password, AuthenticationMode authn)
         {
             SiteAuthentication site = Globals.Sites[url.RemoveTrailingSlash().OriginalString, null];
 
@@ -317,6 +396,8 @@ namespace SPBrowser.Entities
 
                 LogUtil.LogMessage("Added existing site collection, previously loaded.");
             }
+
+            return site;
         }
 
         /// <summary>

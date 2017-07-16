@@ -17,7 +17,7 @@ namespace SPBrowser.Extentions
             SPClient.Web web = (SPClient.Web)selectedNode.Parent.Parent.Tag;
 
             return string.Format("{0}/_layouts/15/appredirect.aspx?instance_id={1}",
-                web.GetWebUrl(),
+                web.GetUrl(),
                 appInstance.Id);
         }
     }

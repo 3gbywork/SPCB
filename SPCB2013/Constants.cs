@@ -127,6 +127,11 @@ namespace SPBrowser
         /// </summary>
         public const string BROWSER_IN_PRIVATE_MODE_LABEL = " (private)";
 
+        /// <summary>
+        /// The Picture Library template base identifier.
+        /// </summary>
+        public const int PICTURE_LIBRARY_BASE_ID = 109;
+        
         #region Image file names
 
         private const string IMAGE_NOT_AVAILABLE = "16x16.png";
@@ -205,6 +210,8 @@ namespace SPBrowser
         public const string IMAGE_FILE_VERSIONS_EVENT = IMAGE_FILE_VERSIONS;
         public const string IMAGE_TIME_ZONES = IMAGE_REGIONAL_SETTINGS;
         public const string IMAGE_COMPLIANCE_INFO = "ComplianceInfo.png";
+        public const string IMAGE_STORAGE_METRICS = "StorageMetrics.png";
+        public const string IMAGE_SITE_ADMINS = "SiteCollectionAdmin.png";
 
         #endregion
     }

@@ -20,12 +20,13 @@ namespace SPBrowser
 #if DEBUG
                 Configuration.Current.LogLevel = LogLevel.Verbose;
 #endif
-                LogUtil.LogMessage("Initialize application {2} v{1} ({0}) on {3} ({4})", 
-                    ProductUtil.GetProductVersionInfo().OriginalFilename, 
-                    ProductUtil.GetProductVersionInfo().ProductVersion, 
+                LogUtil.LogMessage("Initialize application {2} v{1} ({0}) on {3} ({4}) {5}",
+                    ProductUtil.GetProductVersionInfo().OriginalFilename,
+                    ProductUtil.GetProductVersionInfo().ProductVersion,
                     Application.ProductName,
                     Environment.OSVersion,
-                    Environment.OSVersion.Platform);
+                    Environment.OSVersion.Platform,
+                    Environment.OSVersion.ServicePack);
 
                 ConfigUtil.UpgradeAppSettingsAfterRename(Constants.APP_CONFIG_FILE_SPCB2013);
 
@@ -43,11 +44,11 @@ namespace SPBrowser
 
                 LogUtil.TruncateLogFiles();
 
-                if (Configuration.Current.CheckUpdatesOnStartup)
-                {
-                    SplashScreen.UpdateForm("Checking for new releases...");
-                    MainForm.CheckOnUpdate();
-                }
+                //if (Configuration.Current.CheckUpdatesOnStartup)
+                //{
+                //    SplashScreen.UpdateForm("Checking for new releases...");
+                //    Globals.LatestRelease = ProductUtil.GetLatestRelease();
+                //}
 
                 SplashScreen.UpdateForm("Launching application...");
                 MainForm mainForm = new MainForm();
@@ -56,7 +57,14 @@ namespace SPBrowser
             }
             catch (Exception ex)
             {
-                MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (SplashScreen.IsActive())
+                {
+                    SplashScreen.ShowMessageBox(ex.Message, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                else
+                {
+                    MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
                 LogUtil.LogException(ex);
             }
         }
@@ -66,7 +74,7 @@ namespace SPBrowser
             TaskBar.UpdateRecentItemsJumpList();
 
             Configuration.Current.LastUsedVersion = new Version(Application.ProductVersion);
-            
+
             Globals.Sites.Save();
             Globals.Tenants.Save();
             Globals.CustomFeatureDefinitions.Save();

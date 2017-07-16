@@ -54,12 +54,12 @@ namespace SPBrowser.Extentions
             if (selectedNode.Parent.Parent.Tag is SPClient.Site)
             {
                 SPClient.Site site = selectedNode.Parent.Parent.Tag as SPClient.Site;
-                return string.Format("{0}/_layouts/ManageFeatures.aspx?Scope=Site", site.RootWeb.GetWebUrl());
+                return string.Format("{0}/_layouts/ManageFeatures.aspx?Scope=Site", site.RootWeb.GetUrl());
             }
             else
             {
                 SPClient.Web web = selectedNode.Parent.Parent.Tag as SPClient.Web;
-                return string.Format("{0}/_layouts/ManageFeatures.aspx", web.GetWebUrl());
+                return string.Format("{0}/_layouts/ManageFeatures.aspx", web.GetUrl());
             }
         }
     }

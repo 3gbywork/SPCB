@@ -1,6 +1,12 @@
 ﻿SharePoint Client Browser v1.12, released: xx/xx/2017
- - Added support for Time Zone on Regional Settings node
+ - Added support for Time Zones on Regional Settings node
+ - Added Raw Data (tab) support when selecting Properties (key/value pair) node
+ - Added the option to delete sites from the Recent Sites list
  - Updated loading user profiles, now asking the user confirmation to load next set of profiles when loading more than 100 profiles
+ - Updated task bar support for deleting sites from jumplist
+ - Fixed application icon, the SharePoint icon was not showing in the file explorer and system tray
+ - Fixed Splash screen issue with message box not showing in front, because it was hidden behind the splashscreen
+ - Fixed threading issue with Splash screen (InvalidOperationException: window handle has not been created)
 
 SharePoint Client Browser v1.11, released: 01/31/2017
  - Updated loading of all other user profiles, instead of first 500

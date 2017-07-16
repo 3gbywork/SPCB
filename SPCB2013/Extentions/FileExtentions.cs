@@ -9,7 +9,7 @@ namespace SPBrowser.Extentions
 {
     public static class FileExtentions
     {
-        public static string GetFileUrl(this SPClient.File file)
+        public static string GetUrl(this SPClient.File file)
         {
             Uri ctxUrl = new Uri(file.Context.Url.ToLower());
             return string.Format("{0}{1}", ctxUrl.GetServerUrl(), file.ServerRelativeUrl);
@@ -24,10 +24,5 @@ namespace SPBrowser.Extentions
         {
             return file.Name.EndsWith(".aspx", StringComparison.InvariantCultureIgnoreCase);
         }
-
-        //public static string GetSettingsUrl(this SPClient.Folder folder, TreeNode selectedNode)
-        //{
-        //    return null;
-        //}
     }
 }

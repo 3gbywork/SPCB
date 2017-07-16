@@ -114,6 +114,7 @@
             this.lbInfoChangeLog = new System.Windows.Forms.Label();
             this.gvChanges = new System.Windows.Forms.DataGridView();
             this.tpSchemaXml = new System.Windows.Forms.TabPage();
+            this.xvSchemaXML = new SPBrowser.Controls.XMLViewer();
             this.tpRest = new System.Windows.Forms.TabPage();
             this.wbRest = new System.Windows.Forms.WebBrowser();
             this.label1 = new System.Windows.Forms.Label();
@@ -128,7 +129,6 @@
             this.openPowerShellTenantToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator13 = new System.Windows.Forms.ToolStripSeparator();
             this.browseMSDNHelpTenantToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.xvSchemaXML = new SPBrowser.Controls.XMLViewer();
             this.mnContextTenantCollection.SuspendLayout();
             this.mnContextRootSiteCollection.SuspendLayout();
             this.mnContextSite.SuspendLayout();
@@ -291,6 +291,8 @@
             this.ilIcons.Images.SetKeyName(87, "SiteAudit.png");
             this.ilIcons.Images.SetKeyName(88, "InformationRightsManagement.png");
             this.ilIcons.Images.SetKeyName(89, "ComplianceInfo.png");
+            this.ilIcons.Images.SetKeyName(90, "SiteCollectionAdmin.png");
+            this.ilIcons.Images.SetKeyName(91, "StorageMetrics.png");
             // 
             // mnContextSite
             // 
@@ -922,7 +924,7 @@
             this.gvRawData.Location = new System.Drawing.Point(0, 0);
             this.gvRawData.Name = "gvRawData";
             this.gvRawData.ReadOnly = true;
-            this.gvRawData.Size = new System.Drawing.Size(944, 677);
+            this.gvRawData.Size = new System.Drawing.Size(944, 675);
             this.gvRawData.TabIndex = 0;
             // 
             // tpChanges
@@ -959,7 +961,7 @@
             this.gvChanges.Location = new System.Drawing.Point(0, 0);
             this.gvChanges.Name = "gvChanges";
             this.gvChanges.ReadOnly = true;
-            this.gvChanges.Size = new System.Drawing.Size(944, 677);
+            this.gvChanges.Size = new System.Drawing.Size(944, 675);
             this.gvChanges.TabIndex = 1;
             // 
             // tpSchemaXml
@@ -972,6 +974,26 @@
             this.tpSchemaXml.TabIndex = 3;
             this.tpSchemaXml.Text = "Schema XML";
             this.tpSchemaXml.ToolTipText = "Shows the Schema XML for list, content type and field objects.";
+            // 
+            // xvSchemaXML
+            // 
+            this.xvSchemaXML.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.xvSchemaXML.Font = new System.Drawing.Font("Segoe UI", 9F);
+            this.xvSchemaXML.Indent = 4;
+            this.xvSchemaXML.Location = new System.Drawing.Point(0, 0);
+            this.xvSchemaXML.Name = "xvSchemaXML";
+            this.xvSchemaXML.ReadOnly = true;
+            xmlViewerSettings1.AttributeKey = System.Drawing.Color.Red;
+            xmlViewerSettings1.AttributeValue = System.Drawing.Color.Blue;
+            xmlViewerSettings1.Element = System.Drawing.Color.DarkRed;
+            xmlViewerSettings1.Tag = System.Drawing.Color.Blue;
+            xmlViewerSettings1.Value = System.Drawing.Color.Black;
+            this.xvSchemaXML.Settings = xmlViewerSettings1;
+            this.xvSchemaXML.Size = new System.Drawing.Size(944, 675);
+            this.xvSchemaXML.TabIndex = 1;
+            this.xvSchemaXML.Text = "";
+            this.xvSchemaXML.WordWrap = false;
+            this.xvSchemaXML.XmlFontSize = 18;
             // 
             // tpRest
             // 
@@ -1044,7 +1066,7 @@
             this.wbMsdnHelp.Location = new System.Drawing.Point(0, 0);
             this.wbMsdnHelp.MinimumSize = new System.Drawing.Size(20, 20);
             this.wbMsdnHelp.Name = "wbMsdnHelp";
-            this.wbMsdnHelp.Size = new System.Drawing.Size(944, 677);
+            this.wbMsdnHelp.Size = new System.Drawing.Size(944, 675);
             this.wbMsdnHelp.TabIndex = 1;
             this.wbMsdnHelp.ProgressChanged += new System.Windows.Forms.WebBrowserProgressChangedEventHandler(this.wbMsdnHelp_ProgressChanged);
             // 
@@ -1054,7 +1076,7 @@
             this.webBrowser1.Location = new System.Drawing.Point(0, 0);
             this.webBrowser1.MinimumSize = new System.Drawing.Size(20, 20);
             this.webBrowser1.Name = "webBrowser1";
-            this.webBrowser1.Size = new System.Drawing.Size(944, 677);
+            this.webBrowser1.Size = new System.Drawing.Size(944, 675);
             this.webBrowser1.TabIndex = 0;
             // 
             // mnContextTenant
@@ -1106,26 +1128,6 @@
             this.browseMSDNHelpTenantToolStripMenuItem.Text = "Browse &MSDN Help";
             this.browseMSDNHelpTenantToolStripMenuItem.ToolTipText = "Opens the MSDN help for this object.";
             this.browseMSDNHelpTenantToolStripMenuItem.Click += new System.EventHandler(this.browseMSDNHelpToolStripMenuItem_Click);
-            // 
-            // xvSchemaXML
-            // 
-            this.xvSchemaXML.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.xvSchemaXML.Font = new System.Drawing.Font("Segoe UI", 9F);
-            this.xvSchemaXML.Indent = 4;
-            this.xvSchemaXML.Location = new System.Drawing.Point(0, 0);
-            this.xvSchemaXML.Name = "xvSchemaXML";
-            this.xvSchemaXML.ReadOnly = true;
-            xmlViewerSettings1.AttributeKey = System.Drawing.Color.Red;
-            xmlViewerSettings1.AttributeValue = System.Drawing.Color.Blue;
-            xmlViewerSettings1.Element = System.Drawing.Color.DarkRed;
-            xmlViewerSettings1.Tag = System.Drawing.Color.Blue;
-            xmlViewerSettings1.Value = System.Drawing.Color.Black;
-            this.xvSchemaXML.Settings = xmlViewerSettings1;
-            this.xvSchemaXML.Size = new System.Drawing.Size(944, 675);
-            this.xvSchemaXML.TabIndex = 1;
-            this.xvSchemaXML.Text = "";
-            this.xvSchemaXML.WordWrap = false;
-            this.xvSchemaXML.XmlFontSize = 18;
             // 
             // MainForm
             // 

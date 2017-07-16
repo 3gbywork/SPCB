@@ -1,9 +1,8 @@
-﻿using SPBrowser.Entities;
+﻿using System;
+using SPBrowser.Entities;
 using SPBrowser.Utils;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Collections;
 
 namespace SPBrowser
 {
@@ -86,6 +85,16 @@ namespace SPBrowser
         /// </summary>
         internal const string LOG_LEVEL_KEY = "LogLevel";
 
+        public IEnumerable SupportedResourceLanguageNames
+        {
+            get
+            {
+                return _supportedResourceLanguageNames;
+            }
+        }
+        private IEnumerable _supportedResourceLanguageNames;
+        private const string SUPPORTED_RESOURCELANGUAGENAMES_KEY = "SupportedResourceLanguageNames";
+
         /// <summary>
         /// Initiates the configuration object by loading all values from the app.config file.
         /// </summary>
@@ -95,8 +104,13 @@ namespace SPBrowser
             _lastUsedVersion = string.IsNullOrEmpty(ConfigUtil.GetOrCreateAppSetting(LAST_USED_VERSION_KEY)) ? null : new Version(ConfigUtil.GetOrCreateAppSetting(LAST_USED_VERSION_KEY));
             _checkUpdatesOnStartup = ConfigUtil.GetOrCreateAppSetting(CHECK_UPDATES_ON_STARTUP_KEY, true);
             Browser systemBrowser = BrowserUtil.GetSystemDefaultBrowser();
-            _loadAllProperties = ConfigUtil.GetOrCreateAppSetting(LOAD_ALL_PROPERTIES_KEY, false);
+            _loadAllProperties = ConfigUtil.GetOrCreateAppSetting(LOAD_ALL_PROPERTIES_KEY, true);
             _logLevel = ConfigUtil.GetOrCreateAppSetting(LOG_LEVEL_KEY, LogLevel.Exception);
+            _supportedResourceLanguageNames =
+                from string languageName in
+                    ConfigUtil.GetOrCreateAppSetting(SUPPORTED_RESOURCELANGUAGENAMES_KEY, "en-us,de-de,fr-fr").Split(',')
+                where !string.IsNullOrWhiteSpace(languageName)
+                select languageName.Trim();
         }
     }
 }

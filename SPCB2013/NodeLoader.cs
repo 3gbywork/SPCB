@@ -5,6 +5,7 @@ using Microsoft.SharePoint.Client.Taxonomy;
 using Microsoft.SharePoint.Client.UserProfiles;
 using SPBrowser.Entities;
 using SPBrowser.Extentions;
+using SPBrowser.Office365Object;
 using SPBrowser.Utils;
 using System;
 using System.Collections.Generic;
@@ -229,6 +230,7 @@ namespace SPBrowser
                 AddLoadingNode(siteNode, "Site Columns", "Gets the collection of field objects that represents all the fields in the site collection.", Constants.IMAGE_SITE_COLUMN, NodeLoadType.SiteFields);
                 AddLoadingNode(siteNode, "Content Types", "Gets the collection of content types for the site collection.", Constants.IMAGE_CONTENT_TYPE, NodeLoadType.SiteContentTypes);
                 AddLoadingNode(siteNode, "Site Collection Features", "Gets the site collection features for the site collection.", Constants.IMAGE_FEATURE, NodeLoadType.SiteFeatures);
+                AddLoadingNode(siteNode, "Site Administrators", "Site Collection Administrators are given full control over all Web sites in the site collection.", Constants.IMAGE_SITE_ADMINS, NodeLoadType.SiteCollectionAdmins);
                 AddLoadingNode(siteNode, "Event Receivers", "Provides event receivers for events that occur at the scope of the site collection.", Constants.IMAGE_EVENT_RECEIVER, NodeLoadType.SiteEventReceivers);
                 AddLoadingNode(siteNode, "Term Stores", "Represents a collection of TermStore objects.", Constants.IMAGE_TERM_STORE, NodeLoadType.TermStores);
                 AddLoadingNode(siteNode, "User Profiles", "Use the PeopleManager object and other objects in the UserProfiles namespace to access user profiles and user properties from custom solutions for SharePoint Server 2013 and apps for SharePoint.", Constants.IMAGE_USER_PROFILE, NodeLoadType.UserProfiles);
@@ -241,7 +243,7 @@ namespace SPBrowser
                     siteNode.ImageKey = Constants.IMAGE_SITE_WARNING;
                     siteNode.SelectedImageKey = Constants.IMAGE_SITE_WARNING;
 
-                    MessageBox.Show(string.Format("You are NOT connecting to a SharePoint 2013 site ({0}), this could result in errors. Please be aware! The application will continue loading the site as normal.", site.RootWeb.GetWebUrl()), form.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(string.Format("You are NOT connecting to a SharePoint 2013 site ({0}), this could result in errors. Please be aware! The application will continue loading the site as normal.", site.RootWeb.GetUrl()), form.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }
             catch (Exception ex)
@@ -267,6 +269,7 @@ namespace SPBrowser
                     w => w.EffectiveBasePermissions,
                     w => w.HasUniqueRoleAssignments,
                     w => w.RegionalSettings,
+                    w => w.RegionalSettings.TimeZone,
                     w => w.SaveSiteAsTemplateEnabled,
                     w => w.SupportedUILanguageIds,
                     w => w.ThemeInfo,
@@ -343,7 +346,8 @@ namespace SPBrowser
             AddLoadingNode(node, "User Custom Actions", "Gets a value that specifies the collection of user custom actions for the site.", Constants.IMAGE_USER_CUSTOM_ACTIONS, NodeLoadType.WebUserCustomActions);
             AddLoadingNode(node, "Project Policy", "A policy associated with a web site or email mailbox.", Constants.IMAGE_PROJECT_POLICY, NodeLoadType.ProjectPolicy);
 
-            // Add loading node to Regional Settings
+            // Add (loading) nodes to Regional Settings
+            AddTreeNode(regionalSettingsNode, "Current Time Zone", web.RegionalSettings.TimeZone, Constants.IMAGE_REGIONAL_SETTINGS, "Gets and sets the time zone that is used on the current web.", form.mnContextItem);
             AddLoadingNode(regionalSettingsNode, "Time Zones", "Gets the collection of time zones used in a server farm.", Constants.IMAGE_TIME_ZONES, NodeLoadType.TimeZones);
 
 #if CLIENTSDKV160UP
@@ -367,6 +371,20 @@ namespace SPBrowser
                 SPClient.ClientContext ctx = GetClientContext(parentNode);
                 ctx.Load(webs);
                 ctx.ExecuteQuery();
+
+                // load title/description resource
+                foreach (string languageName in Configuration.Current.SupportedResourceLanguageNames)
+                {
+                    foreach (var web in webs)
+                    {
+                        web.TitleResource.GetValueForUICulture(languageName);
+                        web.DescriptionResource.GetValueForUICulture(languageName);
+                    }
+                }
+                if (ctx.HasPendingRequest)
+                {
+                    ctx.ExecuteQuery();
+                }
 
                 int total = webs.Count;
                 int current = 0;
@@ -463,6 +481,20 @@ namespace SPBrowser
                     f => f.SchemaXmlWithResourceTokens));
                 ctx.ExecuteQuery();
 
+                // load title/description resource
+                foreach (string languageName in Configuration.Current.SupportedResourceLanguageNames)
+                {
+                    foreach (var field in result)
+                    {
+                        field.TitleResource.GetValueForUICulture(languageName);
+                        field.DescriptionResource.GetValueForUICulture(languageName);
+                    }
+                }
+                if (ctx.HasPendingRequest)
+                {
+                    ctx.ExecuteQuery();
+                }
+
                 int total = result.Count();
                 int current = 0;
 
@@ -472,7 +504,8 @@ namespace SPBrowser
                 // Add fields to parent node
                 foreach (SPClient.Field field in result)
                 {
-                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", field.Title, field.Group), field, Constants.IMAGE_SITE_COLUMN, "Represents a field in a list on a Microsoft SharePoint Foundation Web site.", form.mnContextItem);
+                    var filedProperty = new Field4PropertyGrid(field);
+                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", field.Title, field.Group), filedProperty, Constants.IMAGE_SITE_COLUMN, "Represents a field in a list on a Microsoft SharePoint Foundation Web site.", form.mnContextItem);
                     if (field.Hidden)
                         node.ForeColor = Color.Gray;
 
@@ -613,7 +646,7 @@ namespace SPBrowser
                         list => list.DefaultDisplayFormUrl,
                         list => list.DefaultEditFormUrl,
                         list => list.DefaultNewFormUrl,
-                        list => list.InformationRightsManagementSettings,
+                        //list => list.InformationRightsManagementSettings, // TODO: Fix InformationRightsManagementSettings, Picture Library does not support IRM
                         list => list.IsSiteAssetsLibrary,
                         list => list.OnQuickLaunch,
                         list => list.ValidationMessage,
@@ -642,9 +675,22 @@ namespace SPBrowser
                         list => list.SchemaXml));
                 }
 
-                // TODO: InformationRightsManagementSettings
 
                 ctx.ExecuteQuery();
+
+                // load title/description resource
+                foreach (string languageName in Configuration.Current.SupportedResourceLanguageNames)
+                {
+                    foreach (var list in result)
+                    {
+                        list.TitleResource.GetValueForUICulture(languageName);
+                        list.DescriptionResource.GetValueForUICulture(languageName);
+                    }
+                }
+                if (ctx.HasPendingRequest)
+                {
+                    ctx.ExecuteQuery();
+                }
 
                 int total = result.Count();
                 int current = 0;
@@ -655,12 +701,16 @@ namespace SPBrowser
                 // Add lists to parent node
                 foreach (SPClient.List list in result)
                 {
-                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", list.Title, list.ItemCount), list, list.GetImageUrlFileName(), "Represents a list on a SharePoint Web site.", form.mnContextItem);
+                    var listProperty = new List4PropertyGrid(list);
+                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", list.Title, list.ItemCount), listProperty, list.GetImageUrlFileName(), "Represents a list on a SharePoint Web site.", form.mnContextItem);
                     if (list.Hidden)
                         node.ForeColor = Color.Gray;
 
                     // Add properties
-                    AddTreeNode(node, "Information Rights Management Settings", list.InformationRightsManagementSettings, Constants.IMAGE_INFORMATION_RIGHTS_MANAGEMENT_SETTINGS, string.Empty, form.mnContextItem);
+                    if (list.BaseTemplate != Constants.PICTURE_LIBRARY_BASE_ID)
+                    {
+                        AddTreeNode(node, "Information Rights Management Settings", list.InformationRightsManagementSettings, Constants.IMAGE_INFORMATION_RIGHTS_MANAGEMENT_SETTINGS, string.Empty, form.mnContextItem);
+                    }
 
                     // Loading nodes
                     AddLoadingNode(node, "Fields", "Gets a value that specifies the collection of all fields in the list.", Constants.IMAGE_SITE_COLUMN, NodeLoadType.ListFields);
@@ -787,33 +837,7 @@ namespace SPBrowser
                 // Add users to parent node
                 foreach (SPClient.User user in users)
                 {
-                    string image = string.Empty;
-
-                    switch (user.PrincipalType)
-                    {
-                        case Microsoft.SharePoint.Client.Utilities.PrincipalType.All:
-                            image = Constants.IMAGE_SITE_USER_EXCLAMATION;
-                            break;
-                        case Microsoft.SharePoint.Client.Utilities.PrincipalType.DistributionList:
-                            image = Constants.IMAGE_SITE_GROUP_DISTRIBUTION;
-                            break;
-                        case Microsoft.SharePoint.Client.Utilities.PrincipalType.None:
-                            image = Constants.IMAGE_SITE_USER_EXCLAMATION;
-                            break;
-                        case Microsoft.SharePoint.Client.Utilities.PrincipalType.SecurityGroup:
-                            image = Constants.IMAGE_SITE_GROUP_SECURITY;
-                            break;
-                        case Microsoft.SharePoint.Client.Utilities.PrincipalType.SharePointGroup:
-                            image = Constants.IMAGE_SITE_GROUP;
-                            break;
-                        case Microsoft.SharePoint.Client.Utilities.PrincipalType.User:
-                            image = Constants.IMAGE_SITE_USER;
-                            break;
-                        default:
-                            break;
-                    }
-
-                    TreeNode node = AddTreeNode(parentNode, user.Title, user, image, "", form.mnContextItem);
+                    TreeNode node = AddTreeNode(parentNode, user.Title, user, user.GetTreeNodeIcon(), "", form.mnContextItem);
 
                     if (user.IsHiddenInUI)
                         node.ForeColor = Color.Gray;
@@ -828,6 +852,50 @@ namespace SPBrowser
                     current++;
                     ItemLoaded(null, new ItemLoadedEventArgs() { TotalItems = total, CurrentItem = current });
                 }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, form.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogUtil.LogException(ex);
+
+                AddLoadingNode(parentNode, loadType);
+            }
+        }
+
+        public static void LoadSiteCollectionAdmins(TreeNode parentNode, Site site, MainForm form, NodeLoadType loadType)
+        {
+            try
+            {
+                UserCollection users = site.RootWeb.SiteUsers;
+
+                ClientContext ctx = GetClientContext(parentNode);
+                ctx.Load(users);
+                ctx.ExecuteQuery();
+
+                int total = users.Count;
+                int current = 0;
+                int adminCount = 0;
+
+                // Add users to parent node
+                foreach (User user in users)
+                {
+                    if (user.IsSiteAdmin)
+                    {
+                        TreeNode node = AddTreeNode(parentNode, user.Title, user, user.GetTreeNodeIcon(), "", form.mnContextItem);
+
+                        if (user.IsHiddenInUI)
+                            node.ForeColor = Color.Gray;
+
+                        adminCount++;
+                    }
+
+                    // Update progress
+                    current++;
+                    ItemLoaded(null, new ItemLoadedEventArgs() { TotalItems = total, CurrentItem = current });
+                }
+
+                // Add count to parent node
+                UpdateCountChildNodes(parentNode, adminCount);
             }
             catch (Exception ex)
             {
@@ -1320,6 +1388,7 @@ namespace SPBrowser
                 // Add folder node
                 TreeNode node = AddTreeNode(parentNode, isRootFolder ? "Root Folder" : folder.Name, folder, Constants.IMAGE_FOLDER, string.Empty, form.mnContextCollection);
 
+                // Add loading nodes
                 AddLoadingNode(node, NodeLoadType.Folder);
             }
             catch (ServerUnauthorizedAccessException ex)
@@ -1333,7 +1402,6 @@ namespace SPBrowser
                     AddLoadingNode(parentNode, NodeLoadType.Folder);
 
                 LogUtil.LogException(ex);
-                //MessageBox.Show(string.Format("Access denied on folder. Error message: {0}", ex.Message), form.Text, MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
@@ -1350,6 +1418,9 @@ namespace SPBrowser
             {
                 SPClient.ClientContext ctx = GetClientContext(parentNode);
                 ctx.Load(folder.Folders);
+#if CLIENTSDKV160UP
+                ctx.Load(folder, f => f.StorageMetrics);
+#endif
                 IEnumerable<File> fileResults = ctx.LoadQuery(folder.Files.IncludeWithDefaultProperties(
 #if CLIENTSDKV161UP
                     f => f.ListId,
@@ -1363,7 +1434,11 @@ namespace SPBrowser
                 int total = folder.Folders.Count + fileResults.Count();
                 int current = 0;
 
-                // Add folder properties
+#if CLIENTSDKV160UP
+                // Add Folder properties
+                AddTreeNode(parentNode, "Storage Metrics", folder.StorageMetrics, Constants.IMAGE_STORAGE_METRICS, string.Empty, form.mnContextItem);
+#endif
+                // Add loading nodes for Folder properties
                 AddLoadingNode(parentNode, "Properties", Constants.IMAGE_PROPERTY, NodeLoadType.FolderProperties);
 
                 // Add folders
@@ -3111,8 +3186,8 @@ namespace SPBrowser
             string pattern = @"\s(\(((?:\d*(\.|\,))?\d+|(?:\d*(\.|\,))?\d+\/(?:\d*(\.|\,))?\d+)\))";
             string text = System.Text.RegularExpressions.Regex.Replace(parentNode.Text, pattern, string.Empty);
 
-            parentNode.Text = string.Format("{0} ({2}{1})", 
-                text, 
+            parentNode.Text = string.Format("{0} ({2}{1})",
+                text,
                 total.ToString("N0"),
                 position == -1 ? string.Empty : string.Format("{0}/", position.ToString("N0")));
         }
@@ -3202,6 +3277,58 @@ namespace SPBrowser
             LoadRawItemData(selectedNode, gvRawData);
             LoadRawKeyValueData(selectedNode, gvRawData);
             LoadRawUserProfileData(selectedNode, gvRawData);
+            LoadRawUserInfoData(selectedNode, gvRawData);
+        }
+
+        private static void LoadRawUserInfoData(TreeNode selectedNode, DataGridView gvRawData)
+        {
+            try
+            {
+                if (selectedNode.Tag is NodeLoadType && ((NodeLoadType)selectedNode.Tag) == NodeLoadType.WebUsers)
+                {
+                    // Reset the grid
+                    gvRawData.Columns.Clear();
+                    gvRawData.Rows.Clear();
+
+                    // Get list data
+                    Web web = (Web)selectedNode.Parent.Tag;
+                    UserCollection users = web.SiteUsers;
+                    web.Context.Load(users);
+                    web.Context.ExecuteQuery();
+
+                    // Add columns
+                    gvRawData.Columns.Add(new DataGridViewTextBoxColumn() { Name = "Email", HeaderText = "Email", DataPropertyName = "Email", ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
+                    gvRawData.Columns.Add(new DataGridViewTextBoxColumn() { Name = "Id", HeaderText = "Id", DataPropertyName = "Id", ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
+                    gvRawData.Columns.Add(new DataGridViewTextBoxColumn() { Name = "IsHiddenInUI", HeaderText = "IsHiddenInUI", DataPropertyName = "IsHiddenInUI", ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
+                    gvRawData.Columns.Add(new DataGridViewTextBoxColumn() { Name = "IsSiteAdmin", HeaderText = "IsSiteAdmin", DataPropertyName = "IsSiteAdmin", ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
+                    gvRawData.Columns.Add(new DataGridViewTextBoxColumn() { Name = "LoginName", HeaderText = "LoginName", DataPropertyName = "LoginName", ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
+                    gvRawData.Columns.Add(new DataGridViewTextBoxColumn() { Name = "Title", HeaderText = "Title", DataPropertyName = "Title", ReadOnly = true, AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells });
+
+                    int total = users.Count;
+                    int current = 0;
+
+                    // Add rows
+                    foreach (SPClient.User user in users)
+                    {
+                        DataGridViewRow row = gvRawData.Rows[gvRawData.Rows.Add()];
+                        row.Cells["Title"].Value = user.Title;
+                        row.Cells["LoginName"].Value = user.LoginName;
+                        row.Cells["Email"].Value = user.Email;
+                        row.Cells["Id"].Value = user.Id;
+                        row.Cells["IsHiddenInUI"].Value = user.IsHiddenInUI;
+                        row.Cells["IsSiteAdmin"].Value = user.IsSiteAdmin;
+
+                        // Update progress
+                        current++;
+                        ItemLoaded(null, new ItemLoadedEventArgs() { TotalItems = total, CurrentItem = current });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message, Application.ProductName, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                LogUtil.LogException(ex);
+            }
         }
 
         private static void LoadRawItemData(TreeNode selectedNode, DataGridView gvRawData)
@@ -3379,7 +3506,7 @@ namespace SPBrowser
 
                 if (selectedNode.Tag.GetType() == typeof(NodeLoadType))
                 {
-                    NodeLoadType nodeType = (NodeLoadType) selectedNode.Tag;
+                    NodeLoadType nodeType = (NodeLoadType)selectedNode.Tag;
 
                     switch (nodeType)
                     {

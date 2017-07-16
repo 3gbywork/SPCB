@@ -1,7 +1,16 @@
 SharePoint Client Browser v3.3, released: xx/xx/2017
- - Added support for Time Zone on Regional Settings node
+ - Added support for Time Zones on Regional Settings node
+ - Added Raw Data (tab) support when selecting Properties (key/value pair) node
+ - Added the option to delete sites from the Recent Sites list
+ - Added the option to delete tenants from the Recent Tenants list
+ - Added support for Edge browser, next to existing browsers Internet Explorer, Chrome, and Firefox
  - Updated loading user profiles, now asking the user confirmation to load next set of profiles when loading more than 100 profiles
  - Updated CSOM to support CSOM release March 2017 - 16.1.6323.1200
+ - Updated task bar support for deleting sites from jumplist
+ - Updated What's New screen with Close-button
+ - Fixed issue Picture Library not supporting Information Rights Management, disabled loading IRM as quickfix (will work on proper fix)
+ - Fixed Splash screen issue with message box not showing in front, because it was hidden behind the splashscreen
+ - Fixed threading issue with Splash screen (InvalidOperationException: window handle has not been created)
 
 SharePoint Client Browser v3.2, released: 03/27/2017
  - Added support for File Version Events on File node

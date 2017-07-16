@@ -10,7 +10,7 @@ namespace SPBrowser.Extentions
     {
         public static string GetSiteSettingsUrl(this SPClient.Site site)
         {
-            return site.RootWeb.GetWebUrl() + "/_layouts/settings.aspx";
+            return site.RootWeb.GetUrl() + "/_layouts/settings.aspx";
         }
 
         /// <summary>

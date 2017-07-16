@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SPBrowser.Entities;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -16,6 +17,8 @@ namespace SPBrowser.Utils
     {
         private const string RELEASE_PREFIX = "Released:";
 
+        private static Regex _regVersion = new Regex(@"v([0-9]|\.)+");
+
 #if !DEBUG
         private const string RELEASE_RSS_FEED_URL = "https://spcb.codeplex.com/project/feeds/rss?ProjectRSSFeed=codeplex%3a%2f%2frelease%2fspcb";
 #else
@@ -24,45 +27,15 @@ namespace SPBrowser.Utils
 #endif
 
         /// <summary>
-        /// Checks if new version is available.
+        /// Gets the latest release.
         /// </summary>
+        /// <remarks>
+        /// Retrieves the lastest release from CodePlex project RSS feed.
+        /// </remarks>
         /// <returns></returns>
-        public static bool IsNewUpdateAvailable(out Version currentReleaseVersion, out Uri downloadUrl, out string currentReleaseTitle)
+        public static Release GetLatestRelease()
         {
-            Regex regVersion = new Regex(@"v([0-9]|\.)+");
-
-            currentReleaseVersion = null;
-            downloadUrl = null;
-            currentReleaseTitle = null;
-
-            try
-            {
-                currentReleaseVersion = GetLatestRelease(out currentReleaseTitle, out downloadUrl);
-
-                if (currentReleaseVersion > GetCurrentProductVersion())
-                    return true;
-            }
-            catch (Exception ex)
-            {
-                LogUtil.LogException(ex);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        /// Gets the latest release from the Internet
-        /// </summary>
-        /// <param name="releaseTitle"></param>
-        /// <param name="downloadUrl"></param>
-        /// <returns></returns>
-        private static Version GetLatestRelease(out string releaseTitle, out Uri downloadUrl)
-        {
-            Regex regVersion = new Regex(@"v([0-9]|\.)+");
-            Version version = new Version();
-
-            releaseTitle = null;
-            downloadUrl = null;
+            Release release = new Release() { Version = new Version() };
 
             try
             {
@@ -70,16 +43,16 @@ namespace SPBrowser.Utils
                 {
                     foreach (var feedItem in GetReleases())
                     {
-                        Match result = regVersion.Match(feedItem.Title.Text);
+                        Match result = _regVersion.Match(feedItem.Title.Text);
 
                         if (result.Success)
                         {
-                            Version release = new Version(result.Value.Replace('v', ' '));
-                            if (release > version)
+                            Version releaseVersion = new Version(result.Value.Replace('v', ' '));
+                            if (releaseVersion > release.Version)
                             {
-                                version = release;
-                                releaseTitle = feedItem.Title.Text.Substring(feedItem.Title.Text.IndexOf(':') + 1).Trim();
-                                downloadUrl = feedItem.Links[0].Uri;
+                                release.Version = releaseVersion;
+                                release.Title = feedItem.Title.Text.Substring(feedItem.Title.Text.IndexOf(':') + 1).Trim();
+                                release.DownloadUrl = feedItem.Links[0].Uri;
                             }
                         }
                     }
@@ -94,7 +67,7 @@ namespace SPBrowser.Utils
                 LogUtil.LogException(ex);
             }
 
-            return version;
+            return release;
         }
 
         /// <summary>
@@ -176,6 +149,16 @@ namespace SPBrowser.Utils
         }
 
         /// <summary>
+        /// Gets the name of the product.
+        /// </summary>
+        /// <returns></returns>
+        internal static string GetProductName()
+        {
+            Assembly assembly = Assembly.GetExecutingAssembly();
+            return assembly.FullName;
+        }
+
+        /// <summary>
         /// Gets the product icon.
         /// </summary>
         /// <returns>Returns the product icon for the current product.</returns>
@@ -192,6 +175,60 @@ namespace SPBrowser.Utils
 #endif
 
             return icon;
+        }
+
+        /// <summary>
+        /// Validates if the SharePoint build version matches this release.
+        /// </summary>
+        /// <remarks>
+        /// Checks if the SharePoint build version is in range of expected build version. 
+        /// </remarks>
+        /// <returns></returns>
+        public static bool DoesServerBuildVersionMatchThisRelease(Version buildVersion, out Server sharePointServer)
+        {
+            bool isMatch = false;
+            sharePointServer = new Server() { BuildVersion = buildVersion };
+
+            // Unknown server version
+            if (buildVersion == null)
+            {
+                sharePointServer.ProductFullname = "unknown SharePoint Server";
+                sharePointServer.CompatibleRelease = "unable to determine release";
+            }
+            else
+            {
+                // Compatibility with SP2013
+                if (buildVersion.Major == 15)
+                {
+                    sharePointServer.ProductFullname = "SharePoint Server 2013";
+                    sharePointServer.CompatibleRelease = "SharePoint 2013 Client Browser";
+#if CLIENTSDKV150
+                    isMatch = true;
+#endif
+                }
+
+                // Compatibility with SP2016
+                if (buildVersion.Major == 16 && buildVersion.Build > 4000 && buildVersion.Build < 5000)
+                {
+                    sharePointServer.ProductFullname = "SharePoint Server 2016";
+                    sharePointServer.CompatibleRelease = "SharePoint 2016 Client Browser";
+#if CLIENTSDKV160
+                    isMatch = true;
+#endif
+                }
+
+                // Compatibility with SPO
+                if (buildVersion.Major == 16 && buildVersion.Build > 6000)
+                {
+                    sharePointServer.ProductFullname = "SharePoint Online";
+                    sharePointServer.CompatibleRelease = "SharePoint Online Client Browser";
+#if CLIENTSDKV161
+                    isMatch = true;
+#endif
+                }
+            }
+
+            return isMatch;
         }
     }
 }

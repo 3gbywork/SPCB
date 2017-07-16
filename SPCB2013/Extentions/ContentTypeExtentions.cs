@@ -17,7 +17,7 @@ namespace SPBrowser.Extentions
             if (selectedNode.Parent.Parent.Tag is SPClient.Site)
             {
                 SPClient.Site site = selectedNode.Parent.Parent.Tag as SPClient.Site;
-                return string.Format("{0}/_layouts/ManageContentType.aspx?ctype={1}", site.RootWeb.GetWebUrl(), ct.Id);
+                return string.Format("{0}/_layouts/ManageContentType.aspx?ctype={1}", site.RootWeb.GetUrl(), ct.Id);
             }
             else if (selectedNode.Parent.Parent.Tag is SPClient.Web)
             {
@@ -25,12 +25,12 @@ namespace SPBrowser.Extentions
                 // <sitecollection>/<web>/_layouts/15/start.aspx#/_layouts/15/ManageContentType.aspx?ctype=0x00A7470EADF4194E2E9ED1031B61DA088403000BE6CEFFF1ACA6429D14B2B7E0A03FE2&Source=https%3A%2F%2Fbramdejager%2Esharepoint%2Ecom%2Fsub%2F%5Flayouts%2F15%2Fmngctype%2Easpx
 
                 SPClient.Web web = selectedNode.Parent.Parent.Tag as SPClient.Web;
-                return string.Format("{0}/_layouts/ManageContentType.aspx?ctype={1}", web.GetWebUrl(), ct.Id);
+                return string.Format("{0}/_layouts/ManageContentType.aspx?ctype={1}", web.GetUrl(), ct.Id);
             }
             else if (selectedNode.Parent.Parent.Tag is SPClient.List)
             {
                 SPClient.List list = selectedNode.Parent.Parent.Tag as SPClient.List;
-                return string.Format("{0}/_layouts/ManageContentType.aspx?list={1}&ctype={2}", list.ParentWeb.GetWebUrl(), list.Id, ct.Id);
+                return string.Format("{0}/_layouts/ManageContentType.aspx?list={1}&ctype={2}", list.ParentWeb.GetUrl(), list.Id, ct.Id);
             }
             else
                 return string.Empty;

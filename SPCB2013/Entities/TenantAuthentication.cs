@@ -155,6 +155,7 @@ namespace SPBrowser.Entities
 
                 // Set client context
                 this.ClientContext = new SPClient.ClientContext(this.AdminUrl);
+                this.ClientContext.ApplicationName = ProductUtil.GetProductName();
 
                 // Set authentication mode and credentials
                 LogUtil.LogMessage("Using SharePoint Online credentials for user '{0}'.", this.UserName);

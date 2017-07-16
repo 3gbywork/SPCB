@@ -33,13 +33,17 @@ namespace SPBrowser
         /// </remarks>
         public static FeatureCollection CustomFeatureDefinitions { get; set; }
 
+
         /// <summary>
-        /// Is a new release available for download?
+        /// Gets or sets the latest release for the SharePoint Client Browser.
         /// </summary>
         /// <remarks>
-        /// Indicates if a new release is available for download, after a check online in Codeplex Releases section for a new release of SharePoint Client Browser.
+        /// Retrieves the lastest release from CodePlex project RSS feed.
         /// </remarks>
-        public static bool IsNewUpdateAvailable { get; set; }
+        /// <value>
+        /// The latest release.
+        /// </value>
+        public static Release LatestRelease { get; set; }
 
         /// <summary>
         /// Command-line arguments provided during startup of the application.

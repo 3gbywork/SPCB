@@ -49,29 +49,29 @@
             // llWeb
             // 
             this.llWeb.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.llWeb.AutoSize = true;
             this.llWeb.BackColor = System.Drawing.Color.Transparent;
             this.llWeb.LinkColor = System.Drawing.Color.White;
-            this.llWeb.Location = new System.Drawing.Point(314, 9);
+            this.llWeb.Location = new System.Drawing.Point(224, 9);
             this.llWeb.Name = "llWeb";
-            this.llWeb.Size = new System.Drawing.Size(213, 17);
+            this.llWeb.Size = new System.Drawing.Size(303, 17);
             this.llWeb.TabIndex = 3;
             this.llWeb.TabStop = true;
             this.llWeb.Text = "http://bramdejager.wordpress.com";
+            this.llWeb.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this.llWeb.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llWeb_LinkClicked);
             // 
             // llTwitter
             // 
             this.llTwitter.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.llTwitter.AutoSize = true;
             this.llTwitter.BackColor = System.Drawing.Color.Transparent;
             this.llTwitter.LinkColor = System.Drawing.Color.White;
-            this.llTwitter.Location = new System.Drawing.Point(431, 26);
+            this.llTwitter.Location = new System.Drawing.Point(274, 26);
             this.llTwitter.Name = "llTwitter";
-            this.llTwitter.Size = new System.Drawing.Size(96, 17);
+            this.llTwitter.Size = new System.Drawing.Size(253, 21);
             this.llTwitter.TabIndex = 4;
             this.llTwitter.TabStop = true;
             this.llTwitter.Text = "@bramdejager";
+            this.llTwitter.TextAlign = System.Drawing.ContentAlignment.TopRight;
             this.llTwitter.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.llTwitter_LinkClicked);
             // 
             // lbStatus
