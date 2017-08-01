@@ -27,7 +27,8 @@ namespace SPBrowser.Utils
                 object obj = propertyInfo.Value;
                 if (obj == null)
                 {
-                    proDic[propertyInfo.Key] = null;
+                    // 设置为null PropertyGrid会抛异常，故改为string.Empty
+                    proDic[propertyInfo.Key] = string.Empty;// null;
                 }
                 else
                 {

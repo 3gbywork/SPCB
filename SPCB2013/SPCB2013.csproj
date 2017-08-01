@@ -327,13 +327,12 @@
     <Compile Include="Entities\CookieReader.cs" />
     <Compile Include="Entities\Release.cs" />
     <Compile Include="Entities\Server.cs" />
-    <Compile Include="Office365Object\Field4PropertyGrid.cs" />
-    <Compile Include="Office365Object\List4PropertyGrid.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="PropertyGridUtility\Adapter\ClientObjectAdapter.cs" />
     <Compile Include="PropertyGridUtility\PropertyDescriptor\DictionaryPropertyDescriptor.cs" />
     <Compile Include="PropertyGridUtility\TypeDescriptor\DictionaryPropertyGridAdapter.cs" />
     <Compile Include="TaskBar.cs" />

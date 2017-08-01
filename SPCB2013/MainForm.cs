@@ -4,6 +4,7 @@ using SPBrowser.Controls;
 using SPBrowser.Entities;
 using SPBrowser.Extentions;
 using SPBrowser.Properties;
+using SPBrowser.PropertyGridUtility.Adapter;
 using SPBrowser.Utils;
 using System;
 using System.Collections.Generic;
@@ -861,7 +862,7 @@ namespace SPBrowser
         {
             if (tabs.SelectedTab == tpProperties)
             {
-                pgProperties.SelectedObject = tvSite.SelectedNode.Tag;
+                pgProperties.SelectedObject = ClientObjectAdapter.ConvertObject(tvSite.SelectedNode.Tag);
             }
         }
 

@@ -5,14 +5,11 @@ using Microsoft.SharePoint.Client.Taxonomy;
 using Microsoft.SharePoint.Client.UserProfiles;
 using SPBrowser.Entities;
 using SPBrowser.Extentions;
-using SPBrowser.Office365Object;
 using SPBrowser.Utils;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
-using System.Net;
-using System.Text;
 using System.Windows.Forms;
 using SPClient = Microsoft.SharePoint.Client;
 using SPTenantAdmin = Microsoft.Online.SharePoint.TenantAdministration;
@@ -504,8 +501,7 @@ namespace SPBrowser
                 // Add fields to parent node
                 foreach (SPClient.Field field in result)
                 {
-                    var filedProperty = new Field4PropertyGrid(field);
-                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", field.Title, field.Group), filedProperty, Constants.IMAGE_SITE_COLUMN, "Represents a field in a list on a Microsoft SharePoint Foundation Web site.", form.mnContextItem);
+                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", field.Title, field.Group), field, Constants.IMAGE_SITE_COLUMN, "Represents a field in a list on a Microsoft SharePoint Foundation Web site.", form.mnContextItem);
                     if (field.Hidden)
                         node.ForeColor = Color.Gray;
 
@@ -701,8 +697,7 @@ namespace SPBrowser
                 // Add lists to parent node
                 foreach (SPClient.List list in result)
                 {
-                    var listProperty = new List4PropertyGrid(list);
-                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", list.Title, list.ItemCount), listProperty, list.GetImageUrlFileName(), "Represents a list on a SharePoint Web site.", form.mnContextItem);
+                    TreeNode node = AddTreeNode(parentNode, string.Format("{0} ({1})", list.Title, list.ItemCount), list, list.GetImageUrlFileName(), "Represents a list on a SharePoint Web site.", form.mnContextItem);
                     if (list.Hidden)
                         node.ForeColor = Color.Gray;
 
