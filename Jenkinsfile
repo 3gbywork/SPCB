@@ -1,6 +1,6 @@
 node {
     stage('Build'){
-        bat '**/tools/releasebuild.bat'
+        bat './tools/releasebuild.bat'
     }
     stage('Test'){
         echo 'Testing...'
