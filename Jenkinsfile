@@ -1,8 +1,6 @@
 Jenkinsfile (Scripted Pipeline)
 node {
     stage('Build'){
-        checkout scm
-
         bat '**/tools/releasebuild.bat'
     }
     stage('Test'){
